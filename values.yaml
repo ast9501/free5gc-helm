@@ -1,0 +1,294 @@
+services:
+  - name: free5gc-amf-svc
+    selector: free5gc-amf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29518
+    - name: sctp
+      protocol: SCTP
+      port: 38412
+  - name: free5gc-ausf-svc
+    selector: free5gc-ausf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29509
+  - name: mongodb-svc
+    selector: free5gc-mongodb
+    ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+  - name: free5gc-nrf-svc
+    selector: free5gc-nrf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29510
+  - name: free5gc-nssf-svc
+    selector: free5gc-nssf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29531
+  - name: free5gc-pcf-svc
+    selector: free5gc-pcf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29507
+  - name: free5gc-smf-svc
+    selector: free5gc-smf
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29502
+    - name: pfcp
+      protocol: UDP
+      port: 8805
+  - name: free5gc-udm-svc
+    selector: free5gc-udm
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29503
+  - name: free5gc-udr-svc
+    selector: free5gc-udr
+    ports:
+    - name: sbi
+      protocol: TCP
+      port: 29504
+deployments:
+  - name: free5gc-amf
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args:
+      - -c
+      - sleep 5s && ./bin/amf
+    cfg:
+      name: amfcfg
+      mntpath: /free5gc/config/amfcfg.yaml
+      subpath: amfcfg.yaml
+    volume:
+      name: amfcfg
+      cfgmapname: free5gc-amf-configmap
+      key: amfcfg.yaml
+      path: amfcfg.yaml
+  - name: free5gc-ausf
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args:
+      - -c
+      - sleep 5s && ./bin/ausf
+    cfg:
+      name: ausfcfg
+      mntpath: /free5gc/config/ausfcfg.yaml
+      subpath: ausfcfg.yaml
+    volume:
+      name: ausfcfg
+      cfgmapname: free5gc-ausf-configmap
+      key: ausfcfg.yaml
+      path: ausfcfg.yaml
+  - name: free5gc-nrf
+    replicas: 1
+    init:
+      name: wait-mongodb
+      image: busybox
+      cmd: 
+        - sh
+        - -c
+        - until nc -z "mongodb-svc:27017"; do echo waiting for the MongoDB; sleep 2; done;
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args:
+      - -c
+      - sleep 5s && ./bin/nrf
+    cfg:
+      name: nrfcfg
+      mntpath: /free5gc/config/nrfcfg.yaml
+      subpath: nrfcfg.yaml
+    volume:
+      name: nrfcfg
+      cfgmapname: free5gc-nrf-configmap
+      key: nrfcfg.yaml
+      path: nrfcfg.yaml
+  - name: free5gc-nssf
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args: ["-c", "sleep 5s && ./bin/nssf"]
+    cfg:
+      name: nssfcfg
+      mntpath: /free5gc/config/nssfcfg.yaml
+      subpath: nssfcfg.yaml
+    volume:
+      name: nssfcfg
+      cfgmapname: free5gc-nssf-configmap
+      key: nssfcfg.yaml
+      path: nssfcfg.yaml
+  - name: free5gc-pcf
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args:
+      - -c
+      - sleep 5s && ./bin/pcf
+    cfg:
+      name: ausfcfg
+      mntpath: /free5gc/config/pcfcfg.yaml
+      subpath: pcfcfg.yaml
+    volume:
+      name: pcfcfg
+      cfgmapname: free5gc-pcf-configmap
+      key: pcfcfg.yaml
+      path: pcfcfg.yaml
+  - name: free5gc-smf
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args:
+      - -c
+      - sleep 5s && ./bin/smf
+    cfg:
+      name: smfcfg
+      mntpath: /free5gc/config/smfcfg.yaml
+      subpath: smfcfg.yaml
+    volume:
+      name: smfcfg
+      cfgmapname: free5gc-smf-configmap
+      key: smfcfg.yaml
+      path: smfcfg.yaml
+  - name: free5gc-udm
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd:
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args: 
+      - -c
+      - sleep 5s && ./bin/udm
+    cfg:
+      name: udmcfg
+      mntpath: /free5gc/config/udmcfg.yaml
+      subpath: udmcfg.yaml
+    volume:
+      name: udmcfg
+      cfgmapname: free5gc-udm-configmap
+      key: udmcfg.yaml
+      path: udmcfg.yaml
+  - name: free5gc-udr
+    replicas: 1
+    init:
+      name: wait-nrf
+      image: sequenceiq/busybox
+      cmd: 
+        - sh
+        - -c
+        - while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" http://free5gc-nrf-svc:8000) -ne 200 ]; do echo waiting for dependencies; sleep 1; done
+    image:
+      repository: free5gmano/free5gc-control-plane
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/sh"]
+    args: 
+      - -c
+      - sleep 5s && ./bin/udr
+    cfg:
+      name: udrcfg
+      mntpath: /free5gc/config/udrcfg.yaml
+      subpath: udrcfg.yaml
+    volume:
+      name: udrcfg
+      cfgmapname: free5gc-udr-configmap
+      key: udrcfg.yaml
+      path: udrcfg.yaml
+  - name: free5gc-webui
+    replicas: 1
+    init:
+      name: wait-mongodb
+      image: busybox
+      cmd: 
+        - sh
+        - -c
+        - until nc -z "mongodb-svc:27017"; do echo waiting for the MongoDB; sleep 2; done;
+    image:
+      repository: free5gmano/free5gc-webui
+      tag: stage3.0.5-amd64
+      imagePullPolicy: Always
+    cmd: ["/bin/bash"]
+    args: #["-c", "./webconsole/bin/webconsole"]
+      - -c
+      - ./webconsole/bin/webconsole
+    cfg:
+      name: webuicfg
+      mntpath: /free5gc/config/webuicfg.yaml
+      subpath: webuicfg.yaml
+    volume:
+      name: webuicfg
+      cfgmapname: free5gc-webui-configmap
+      key: webuicfg.yaml
+      path: webuicfg.yaml
