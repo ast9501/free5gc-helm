@@ -1,0 +1,45 @@
+{{- $release_name := .Release.Name }}
+{{- range $deployment := .Values.udmDeployments }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ $release_name }}-{{ $deployment.name }}"
+spec:
+  selector:
+    matchLabels:
+      app: {{ $deployment.name }}
+  replicas: {{ $deployment.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ $deployment.name }}
+    spec:
+      initContainers:
+        - name: {{ $deployment.init.name }}
+          image: {{ $deployment.init.image }}
+          command:
+            {{ toYaml $deployment.init.cmd | nindent 12 }}
+      containers:
+      - name: {{ $deployment.name }}
+        image: "{{ $deployment.image.repository }}:{{ $deployment.image.tag }}"
+        imagePullPolicy: {{ $deployment.image.imagePullPolicy }}
+        command:  {{ $deployment.cmd }}
+        args: #{{ $deployment.args }}
+          {{ toYaml $deployment.args | nindent 10 }}
+        env:
+        - name: GIN_MODE
+          value: debug
+        volumeMounts:
+        - name: {{ $deployment.cfg.name }}
+          mountPath: {{ $deployment.cfg.mntpath }}
+          subPath: {{ $deployment.cfg.subpath }}
+      volumes:
+      - name: {{ $deployment.volume.name }}
+        configMap:
+          name: {{ $deployment.volume.cfgmapname }}
+          items:
+          - key: {{ $deployment.volume.key }}
+            path: {{ $deployment.volume.path }}
+          #ports:
+          #- containerPort: {{ $deployment.containerPort }}
+{{- end }}

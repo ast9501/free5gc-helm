@@ -1,4 +1,5 @@
-services:
+#services:
+amfService:
   - name: free5gc-amf-svc
     selector: free5gc-amf
     ports:
@@ -8,36 +9,42 @@ services:
     - name: sctp
       protocol: SCTP
       port: 38412
+ausfService:
   - name: free5gc-ausf-svc
     selector: free5gc-ausf
     ports:
     - name: sbi
       protocol: TCP
       port: 29509
+mondgdbService:
   - name: mongodb-svc
     selector: free5gc-mongodb
     ports:
     - name: db
       protocol: TCP
       port: 27017
+nrfService:
   - name: free5gc-nrf-svc
     selector: free5gc-nrf
     ports:
     - name: sbi
       protocol: TCP
       port: 29510
+nssfService:
   - name: free5gc-nssf-svc
     selector: free5gc-nssf
     ports:
     - name: sbi
       protocol: TCP
       port: 29531
+pcfService:
   - name: free5gc-pcf-svc
     selector: free5gc-pcf
     ports:
     - name: sbi
       protocol: TCP
       port: 29507
+smfService:
   - name: free5gc-smf-svc
     selector: free5gc-smf
     ports:
@@ -47,19 +54,21 @@ services:
     - name: pfcp
       protocol: UDP
       port: 8805
+udmService:
   - name: free5gc-udm-svc
     selector: free5gc-udm
     ports:
     - name: sbi
       protocol: TCP
       port: 29503
+udrService:
   - name: free5gc-udr-svc
     selector: free5gc-udr
     ports:
     - name: sbi
       protocol: TCP
       port: 29504
-deployments:
+amfDeployments:
   - name: free5gc-amf
     replicas: 1
     init:
@@ -86,6 +95,7 @@ deployments:
       cfgmapname: free5gc-amf-configmap
       key: amfcfg.yaml
       path: amfcfg.yaml
+ausfDeployments:
   - name: free5gc-ausf
     replicas: 1
     init:
@@ -112,6 +122,7 @@ deployments:
       cfgmapname: free5gc-ausf-configmap
       key: ausfcfg.yaml
       path: ausfcfg.yaml
+nrfDeployment:
   - name: free5gc-nrf
     replicas: 1
     init:
@@ -138,6 +149,7 @@ deployments:
       cfgmapname: free5gc-nrf-configmap
       key: nrfcfg.yaml
       path: nrfcfg.yaml
+nssfDeployments:
   - name: free5gc-nssf
     replicas: 1
     init:
@@ -162,6 +174,7 @@ deployments:
       cfgmapname: free5gc-nssf-configmap
       key: nssfcfg.yaml
       path: nssfcfg.yaml
+pcfDeployments:
   - name: free5gc-pcf
     replicas: 1
     init:
@@ -180,7 +193,7 @@ deployments:
       - -c
       - sleep 5s && ./bin/pcf
     cfg:
-      name: ausfcfg
+      name: pcfcfg
       mntpath: /free5gc/config/pcfcfg.yaml
       subpath: pcfcfg.yaml
     volume:
@@ -188,6 +201,7 @@ deployments:
       cfgmapname: free5gc-pcf-configmap
       key: pcfcfg.yaml
       path: pcfcfg.yaml
+smfDeployments:
   - name: free5gc-smf
     replicas: 1
     init:
@@ -214,6 +228,7 @@ deployments:
       cfgmapname: free5gc-smf-configmap
       key: smfcfg.yaml
       path: smfcfg.yaml
+udmDeployments:
   - name: free5gc-udm
     replicas: 1
     init:
@@ -240,6 +255,7 @@ deployments:
       cfgmapname: free5gc-udm-configmap
       key: udmcfg.yaml
       path: udmcfg.yaml
+udrDeployments:
   - name: free5gc-udr
     replicas: 1
     init:
@@ -266,6 +282,7 @@ deployments:
       cfgmapname: free5gc-udr-configmap
       key: udrcfg.yaml
       path: udrcfg.yaml
+webuiDeployments:
   - name: free5gc-webui
     replicas: 1
     init:
